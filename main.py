@@ -1,5 +1,5 @@
 import openpyxl
-from openpyxl.utils import column_index_from_string
+from openpyxl.utils import column_index_from_string, get_column_letter
 
 def replace_words(replacements: dict, phrases: list):
     # Новый список для хранения результата
@@ -17,7 +17,9 @@ def replace_words(replacements: dict, phrases: list):
                 
                 # Если ключ найден в фразе, делаем замены и добавляем в результат
                 for value in values:
-                    result.append(phrase.replace(key, value))
+                    replased_phrase = phrase.replace(key, str(value))
+                    result.append(replased_phrase)
+                
                 replaced = True
         
         if not replaced:
@@ -47,16 +49,20 @@ print("Чтение и обработка данных из листа script.."
 for row in sheet_script.iter_rows(min_row=1, max_col=2):
     if row[0]:
         column_a = row[0].value.lower().strip() if row[0].value else ""
+        column_a = column_a.split("-")
         selected_columns = [column_index_from_string(col) for col in column_a]
         result_array = []
         for col in selected_columns:
+            retry = 1
             multiplier = sheet_words.cell(row=3, column=col).value
             if not isinstance(multiplier, int):
-                print(f"В {col} в третьей строке на листе words не цифра, пропускаем столбец")
-                continue
+                print(f"В столбце {get_column_letter(col)} в третьей строке на листе words не цифра, пропускаем столбец. Значение в ячейке: {multiplier}")
+                raise Exception
             for cell in sheet_words.iter_rows(min_row=4, min_col=col, max_col=col, max_row=sheet_words.max_row, values_only=True):
                 word = cell[0]
                 if word:
+                    if ")-(" in word:
+                        retry = len(word.split(")-("))
                     # Умножаем слово на значение из второй строки
                     words_multiplied = [word] * abs(multiplier)
                         
@@ -65,18 +71,23 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
                         result_array.append(word_variant)
             
         # Замена переменных
-        processed_array = replace_words(variables_dict, result_array)
+        processed_array = result_array
+        for i in range(retry):
+            processed_array = replace_words(variables_dict, processed_array)
+
 
         # Формируем массив в формате JSON
-        json_array = [f'"{word}"' for phrase  in processed_array for word in phrase.split()]
+        json_array = [f'"{word}"' for phrase  in processed_array for word in phrase.split(", ")]
         json_array_2 = []
         for word in json_array:
             if "-" in word:
+                json_array_2.append(word)
                 json_array_2.append(word.replace("-", ""))
                 json_array_2.append(word.replace("-", " "))
             else:
-                json_array_2.append(word)
-        json_result = "[" + ",".join(json_array_2) + "]"
+                json_array_2.append(word.replace("(", "").replace(")", ""))
+        
+        json_result = "[" + ", ".join(json_array_2) + "]"
         # Записываем результат в колонку B
         row[1].value = json_result
 

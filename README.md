@@ -10,9 +10,13 @@ python -m venv venv
 ```
 3. Установка зависимостей
 ```
+.\venv\Scripts\activate.
+```
+4. Установка зависимостей
+```
 pip install -r requirements.txt
 ```
-4. Запуск скрипта 
+5. Запуск скрипта 
 ```
 py main.py
 ```

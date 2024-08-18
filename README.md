@@ -10,7 +10,7 @@ python -m venv venv
 ```
 3. Установка зависимостей
 ```
-.\venv\Scripts\activate.
+.\venv\Scripts\activate
 ```
 4. Установка зависимостей
 ```

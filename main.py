@@ -43,7 +43,8 @@ variables_dict = {}
 for row in sheet_variables.iter_rows(values_only=True):
     var_name, *var_values = row
     var_values = [var for var in var_values if var]
-    variables_dict[var_name] = var_values
+    if var_values:
+        variables_dict[var_name] = var_values
 print("Чтение и обработка данных из листа script..")
 # Чтение и обработка данных из листа script
 for row in sheet_script.iter_rows(min_row=1, max_col=2):
@@ -55,7 +56,11 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
         for col in selected_columns:
             retry = 1
             multiplier = sheet_words.cell(row=3, column=col).value
-            if not isinstance(multiplier, int):
+            try:
+                multiplier = int(multiplier)
+            except:
+                multiplier = multiplier
+            if not isinstance(multiplier, int) | isinstance(multiplier, float):
                 print(f"В столбце {get_column_letter(col)} в третьей строке на листе words не цифра, пропускаем столбец. Значение в ячейке: {multiplier}")
                 raise Exception
             for cell in sheet_words.iter_rows(min_row=4, min_col=col, max_col=col, max_row=sheet_words.max_row, values_only=True):

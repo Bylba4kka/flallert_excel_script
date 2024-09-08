@@ -82,7 +82,7 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
             for cell in sheet_words.iter_rows(min_row=4, min_col=col, max_col=col, max_row=sheet_words.max_row):
                 word = cell[0].value
                 if word:
-                    word = word.strip()
+                    word = word
                     print("Работаем над словом:", word, "Ячейка:", cell)
                     if ")-(" in word:
                         retry = len(word.split(")-("))

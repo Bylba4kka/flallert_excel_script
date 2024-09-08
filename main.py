@@ -55,9 +55,11 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
         selected_columns =  []
         for col in column_a:
             try:
-                selected_columns.append[column_index_from_string(col)]  
-            except:
-                continue
+                col = column_index_from_string(col)
+                selected_columns.append(col)
+            except Exception as ex:
+                print(ex)
+        
         result_array = []
         for col in selected_columns:
             retry = 1

@@ -51,7 +51,13 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
     if row[0]:
         column_a = row[0].value.lower().strip() if row[0].value else ""
         column_a = column_a.split("-")
-        selected_columns = [column_index_from_string(col) for col in column_a]
+
+        selected_columns =  []
+        for col in column_a:
+            try:
+                selected_columns.append[column_index_from_string(col)]  
+            except:
+                continue
         result_array = []
         for col in selected_columns:
             retry = 1

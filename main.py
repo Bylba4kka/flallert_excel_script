@@ -10,7 +10,7 @@ def replace_words(replacements: dict, phrases: list):
     # Итерируем по списку фраз
     for phrase in phrases:
         replaced = False  # Флаг, чтобы проверить, была ли замена
-        
+        # print(f"Обрабатываем фразу: {phrase}")
         # Проверяем каждый ключ из словаря
         for key, values in replacements.items():
             if key in phrase:
@@ -19,14 +19,16 @@ def replace_words(replacements: dict, phrases: list):
                 
                 # Если ключ найден в фразе, делаем замены и добавляем в результат
                 for value in values:
-                    replased_phrase = phrase.replace(key, str(value))
-                    print(f"Заменяем '{phrase}' на '{replased_phrase}'")
+                    # print("Фраза под замену", phrase)
+                    replased_phrase = phrase.replace(key, str(value).strip())
+                    # print(f"Заменяем '{phrase}' на '{replased_phrase}'")
                     result.append(replased_phrase)
                 
                 replaced = True
         
         if not replaced:
             # Если замена не производилась, добавляем исходную фразу
+            # print("Исходная фраза", phrase)
             result.append(phrase)
 
     # Выводим результат
@@ -48,7 +50,7 @@ for row in sheet_variables.iter_rows(values_only=True):
     # if row[0].value:
         # print("row", row[0].value)
     var_name, *var_values = row
-    var_values = [var for var in var_values if var]
+    var_values = [var.strip() for var in var_values if var]
     if var_values:
         variables_dict[var_name] = var_values
 print("variables_dict:", variables_dict)
@@ -96,16 +98,19 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
         processed_array = result_array
         for i in range(retry):
             processed_array = replace_words(variables_dict, processed_array)
-
+        # print("processed_array", processed_array)
         json_array = []
         for word in processed_array:
-            word = word.replace('"', "")
+            table = str.maketrans("", "", "()")
+            word = word.translate(table)
             if "-" in word:
                 json_array.append(word)
                 json_array.append(word.replace("-", ""))
                 json_array.append(word.replace("-", " "))
             else:
                 json_array.append(word.replace("(", "").replace(")", ""))
+                # json_array.append(word)
+        # print("json_array", json_array)
         # Записываем результат в колонку B
         row[1].value = json.dumps(json_array, ensure_ascii=False)
 

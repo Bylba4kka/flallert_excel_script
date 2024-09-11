@@ -2,8 +2,9 @@ import openpyxl
 from openpyxl.utils import column_index_from_string, get_column_letter
 import json
 
+
 def replace_words(replacements: dict, phrases: list):
-    print("Заменяем слова..")
+    # print("Заменяем слова..")
     # Новый список для хранения результата
     result = []
 
@@ -35,7 +36,7 @@ def replace_words(replacements: dict, phrases: list):
     return result
 
 
-FILENAME = "file.xlsx"
+FILENAME = "file_alex.xlsx"
 # Открываем файл
 print("Открываем файл..")
 workbook = openpyxl.load_workbook(FILENAME, data_only=True)
@@ -53,12 +54,12 @@ for row in sheet_variables.iter_rows(values_only=True):
     var_values = [var.strip() for var in var_values if var]
     if var_values:
         variables_dict[var_name] = var_values
-print("variables_dict:", variables_dict)
+# print("variables_dict:", variables_dict)
 print("Чтение и обработка данных из листа script..")
 # Чтение и обработка данных из листа script
 for row in sheet_script.iter_rows(min_row=1, max_col=2):
     if row[0].value:
-        print(f"Чтение ячеек из листа script. Значение {row[0].value}. Ячейка: {row}")
+        # print(f"Чтение ячеек из листа script. Значение {row[0].value}. Ячейка: {row}")
         column_a = row[0].value.lower().strip() if row[0].value else None
         column_a = column_a.split("-")
 
@@ -71,7 +72,7 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
                 pass
         result_array = []
         for col in selected_columns:
-            print(f"Работаем со столбоцом {get_column_letter(col)} в листе words")
+            # print(f"Работаем со столбоцом {get_column_letter(col)} в листе words")
             retry = 1
             multiplier = sheet_words.cell(row=3, column=col).value
             try:
@@ -85,7 +86,7 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
                 word = cell[0].value
                 if word:
                     word = word
-                    print("Работаем над словом:", word, "Ячейка:", cell)
+                    # print("Работаем над словом:", word, "Ячейка:", cell)
                     if ")-(" in word:
                         retry = len(word.split(")-("))
                     # Умножаем слово на значение из второй строки
@@ -104,15 +105,23 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
             table = str.maketrans("", "", "()")
             word = word.translate(table)
             if "-" in word:
+                table = str.maketrans("-", " ")
                 json_array.append(word)
-                json_array.append(word.replace("-", ""))
-                json_array.append(word.replace("-", " "))
+                json_array.append(word.translate(table))
+                table = str.maketrans("", "", "-")
+                json_array.append(word.translate(table))
             else:
-                json_array.append(word.replace("(", "").replace(")", ""))
+                json_array.append(word)
                 # json_array.append(word)
         # print("json_array", json_array)
+
+
         # Записываем результат в колонку B
-        row[1].value = json.dumps(json_array, ensure_ascii=False)
+        result = json.dumps(json_array, ensure_ascii=False)
+        print(f"Длина строки {len(result)}")
+        with open(f"{row[0].value}result.json", "w", encoding="utf-8") as f:
+            f.write(result)
+        row[1].value = result
 
 print("Сохраняем файл..")
 # Сохраняем изменения
@@ -121,3 +130,4 @@ try:
     print(f"Файл {FILENAME} успешно сохранён..")
 except PermissionError:
     print(f"Файл {FILENAME} не был сохранён. Попробуйте закрыть файл эксель перед запуском скрипта..")
+

@@ -1,6 +1,9 @@
 import openpyxl
 from openpyxl.utils import column_index_from_string, get_column_letter
 import json
+import os
+
+FILENAME = "file.xlsx"
 
 
 def replace_words(replacements: dict, phrases: list):
@@ -36,7 +39,6 @@ def replace_words(replacements: dict, phrases: list):
     return result
 
 
-FILENAME = "file_alex.xlsx"
 # Открываем файл
 print("Открываем файл..")
 workbook = openpyxl.load_workbook(FILENAME, data_only=True)
@@ -48,8 +50,6 @@ print("Читаем переменные..")
 variables_dict = {}
 for row in sheet_variables.iter_rows(values_only=True):
     # print(F'Записываем в словарь "{row[0].value}" из листа variables')
-    # if row[0].value:
-        # print("row", row[0].value)
     var_name, *var_values = row
     var_values = [var.strip() for var in var_values if var]
     if var_values:
@@ -112,22 +112,25 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
                 json_array.append(word.translate(table))
             else:
                 json_array.append(word)
-                # json_array.append(word)
         # print("json_array", json_array)
 
 
         # Записываем результат в колонку B
         result = json.dumps(json_array, ensure_ascii=False)
-        print(f"Длина строки {len(result)}")
-        with open(f"{row[0].value}result.json", "w", encoding="utf-8") as f:
-            f.write(result)
-        row[1].value = result
+        # print(f"Длина строки {len(result)}")
+        filename = f"{row[0].value.replace("-", "")[:250]}.json"
+        path = "results/"
 
-print("Сохраняем файл..")
+        try:
+            with open(path + filename, "w", encoding="utf-8") as f:
+                f.write(result)
+        except FileNotFoundError:
+            os.mkdir(path)
+            with open(path + filename, "w", encoding="utf-8") as f:
+                f.write(result)
+
+
+        print(f"Сохраняем файл {filename}")
+
 # Сохраняем изменения
-try:
-    workbook.save(FILENAME)
-    print(f"Файл {FILENAME} успешно сохранён..")
-except PermissionError:
-    print(f"Файл {FILENAME} не был сохранён. Попробуйте закрыть файл эксель перед запуском скрипта..")
-
+print(f"Файлы успешно сохранены..")

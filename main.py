@@ -4,9 +4,9 @@ import json
 import os
 
 FILENAME = "file.xlsx"
-
-
+fix_brackets_list = []
 def replace_words(replacements: dict, phrases: list):
+    global fix_brackets_list
     # print("Заменяем слова..")
     # Новый список для хранения результата
     result = []
@@ -25,6 +25,7 @@ def replace_words(replacements: dict, phrases: list):
                 for value in values:
                     # print("Фраза под замену", phrase)
                     replased_phrase = phrase.replace(key, str(value).strip())
+                    fix_brackets_list.append(key)
                     # print(f"Заменяем '{phrase}' на '{replased_phrase}'")
                     result.append(replased_phrase)
                 
@@ -59,6 +60,7 @@ print("Чтение и обработка данных из листа script.."
 # Чтение и обработка данных из листа script
 for row in sheet_script.iter_rows(min_row=1, max_col=2):
     if row[0].value:
+        print("Вызов")
         # print(f"Чтение ячеек из листа script. Значение {row[0].value}. Ячейка: {row}")
         column_a = row[0].value.lower().strip() if row[0].value else None
         column_a = column_a.split("-")
@@ -101,9 +103,11 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
             processed_array = replace_words(variables_dict, processed_array)
         # print("processed_array", processed_array)
         json_array = []
+        fix_brackets_list = list(set(fix_brackets_list))
         for word in processed_array:
-            table = str.maketrans("", "", "()")
-            word = word.translate(table)
+            if any(fix_bracket in word for fix_bracket in fix_brackets_list):
+                continue
+
             if "-" in word:
                 table = str.maketrans("-", " ")
                 json_array.append(word)
@@ -117,20 +121,14 @@ for row in sheet_script.iter_rows(min_row=1, max_col=2):
 
         # Записываем результат в колонку B
         result = json.dumps(json_array, ensure_ascii=False)
-        # print(f"Длина строки {len(result)}")
-        filename = f"{row[0].value.replace("-", "")[:250]}.json"
+        filename_part = row[0].value.replace("-", "")[:180]
         path = "results/"
-
-        try:
-            with open(path + filename, "w", encoding="utf-8") as f:
-                f.write(result)
-        except FileNotFoundError:
+        if not os.path.exists(path):
             os.mkdir(path)
-            with open(path + filename, "w", encoding="utf-8") as f:
-                f.write(result)
+        with open(f"{path}{filename_part}.json", "w", encoding="utf-8") as f:
+            f.write(result)
 
-
-        print(f"Сохраняем файл {filename}")
+        print(f"Сохраняем файл {f"{path}{filename_part}.json"}")
 
 # Сохраняем изменения
 print(f"Файлы успешно сохранены..")
